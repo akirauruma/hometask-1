@@ -7,14 +7,13 @@ import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import com.badlogic.gdx.math.GridPoint2;
 import ru.mipt.bit.platformer.control.GdxInputProvider;
 import ru.mipt.bit.platformer.control.KeyboardController;
-import ru.mipt.bit.platformer.control.MovePlayerCommand;
+import ru.mipt.bit.platformer.control.MoveCommand;
 import ru.mipt.bit.platformer.graphics.LevelRenderer;
 import ru.mipt.bit.platformer.model.Direction;
+import ru.mipt.bit.platformer.model.GameObject;
 import ru.mipt.bit.platformer.model.Level;
 import ru.mipt.bit.platformer.model.Tank;
 import ru.mipt.bit.platformer.model.Tree;
-
-import java.util.Collections;
 
 import static com.badlogic.gdx.Input.Keys.A;
 import static com.badlogic.gdx.Input.Keys.D;
@@ -25,15 +24,15 @@ import static com.badlogic.gdx.Input.Keys.S;
 import static com.badlogic.gdx.Input.Keys.UP;
 import static com.badlogic.gdx.Input.Keys.W;
 
-/**
- * Only wires the pieces together and runs the game loop:
- * read input -> update the model -> draw the model.
- */
+/** Wires everything together and runs the loop: input -> update -> render. */
 public class GameDesktopLauncher implements ApplicationListener {
 
     private static final String LEVEL_FILE = "level.tmx";
+    private static final String TANK_TEXTURE = "images/tank_blue.png";
+    private static final String TREE_TEXTURE = "images/greenTree.png";
     private static final GridPoint2 TANK_START = new GridPoint2(1, 1);
     private static final GridPoint2 TREE_POSITION = new GridPoint2(1, 3);
+    private static final float TANK_MOVEMENT_SPEED = 0.4f;
 
     private LevelRenderer levelRenderer;
     private Level level;
@@ -42,23 +41,27 @@ public class GameDesktopLauncher implements ApplicationListener {
     @Override
     public void create() {
         levelRenderer = new LevelRenderer(LEVEL_FILE);
-        level = new Level(
-                levelRenderer.getLevelWidth(),
-                levelRenderer.getLevelHeight(),
-                new Tank(TANK_START, Direction.RIGHT),
-                Collections.singletonList(new Tree(TREE_POSITION)));
+        level = new Level(levelRenderer.getLevelWidth(), levelRenderer.getLevelHeight());
 
-        // One binding per key. Adding a new handler later (e.g. SPACE -> fire) is a single
-        // extra .bind(...) line here and a new Command class — nothing else changes.
+        Tank playerTank = new Tank(TANK_START, Direction.RIGHT, TANK_MOVEMENT_SPEED, level);
+        place(playerTank, TANK_TEXTURE);
+        place(new Tree(TREE_POSITION), TREE_TEXTURE);
+
+        // new action = new Command + one more bind()
         controller = new KeyboardController(new GdxInputProvider())
-                .bind(UP, new MovePlayerCommand(level, Direction.UP))
-                .bind(W, new MovePlayerCommand(level, Direction.UP))
-                .bind(LEFT, new MovePlayerCommand(level, Direction.LEFT))
-                .bind(A, new MovePlayerCommand(level, Direction.LEFT))
-                .bind(DOWN, new MovePlayerCommand(level, Direction.DOWN))
-                .bind(S, new MovePlayerCommand(level, Direction.DOWN))
-                .bind(RIGHT, new MovePlayerCommand(level, Direction.RIGHT))
-                .bind(D, new MovePlayerCommand(level, Direction.RIGHT));
+                .bind(UP, new MoveCommand(playerTank, Direction.UP))
+                .bind(W, new MoveCommand(playerTank, Direction.UP))
+                .bind(LEFT, new MoveCommand(playerTank, Direction.LEFT))
+                .bind(A, new MoveCommand(playerTank, Direction.LEFT))
+                .bind(DOWN, new MoveCommand(playerTank, Direction.DOWN))
+                .bind(S, new MoveCommand(playerTank, Direction.DOWN))
+                .bind(RIGHT, new MoveCommand(playerTank, Direction.RIGHT))
+                .bind(D, new MoveCommand(playerTank, Direction.RIGHT));
+    }
+
+    private void place(GameObject object, String texturePath) {
+        level.add(object);
+        levelRenderer.add(object, texturePath);
     }
 
     @Override
@@ -68,7 +71,7 @@ public class GameDesktopLauncher implements ApplicationListener {
 
         controller.processInput();
         level.update(deltaTime);
-        levelRenderer.render(level);
+        levelRenderer.render();
     }
 
     @Override
