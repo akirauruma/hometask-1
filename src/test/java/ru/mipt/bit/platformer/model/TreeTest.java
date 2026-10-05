@@ -23,10 +23,16 @@ class TreeTest {
 
     @Test
     void isAStaticObjectAtRestFacingUpright() {
-        // A tree relies on the GameObject defaults: it never moves and is never rotated.
         Tree tree = new Tree(new GridPoint2(2, 7));
         assertEquals(tree.getCoordinates(), tree.getDestination());
         assertEquals(1f, tree.getMovementProgress());
         assertEquals(0f, tree.getRotation());
+    }
+
+    @Test
+    void updateDoesNotMoveIt() {
+        Tree tree = new Tree(new GridPoint2(2, 7));
+        tree.update(1f);
+        assertEquals(new GridPoint2(2, 7), tree.getCoordinates());
     }
 }
