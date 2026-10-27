@@ -7,17 +7,19 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-/** Random trees and a random player start, all on different tiles. */
+/** Random player start, trees and enemy tanks, all on different tiles. */
 public class RandomLevelGenerator implements LevelGenerator {
 
     private final int treeCount;
+    private final int enemyCount;
     private final Random random;
 
-    public RandomLevelGenerator(int treeCount, Random random) {
-        if (treeCount < 0) {
-            throw new IllegalArgumentException("Negative tree count: " + treeCount);
+    public RandomLevelGenerator(int treeCount, int enemyCount, Random random) {
+        if (treeCount < 0 || enemyCount < 0) {
+            throw new IllegalArgumentException("Negative count: " + treeCount + " trees, " + enemyCount + " enemies");
         }
         this.treeCount = treeCount;
+        this.enemyCount = enemyCount;
         this.random = random;
     }
 
@@ -25,12 +27,15 @@ public class RandomLevelGenerator implements LevelGenerator {
     public LevelLayout generate(int width, int height) {
         List<GridPoint2> tiles = allTiles(width, height);
         // one tile is left for the player
-        if (treeCount >= tiles.size()) {
-            throw new IllegalArgumentException(
-                    treeCount + " trees and the player do not fit into " + width + "x" + height);
+        if (treeCount + enemyCount >= tiles.size()) {
+            throw new IllegalArgumentException(treeCount + " trees, " + enemyCount
+                    + " enemies and the player do not fit into " + width + "x" + height);
         }
         Collections.shuffle(tiles, random);
-        return new LevelLayout(tiles.get(0), tiles.subList(1, treeCount + 1));
+        int treesEnd = 1 + treeCount;
+        return new LevelLayout(tiles.get(0),
+                tiles.subList(1, treesEnd),
+                tiles.subList(treesEnd, treesEnd + enemyCount));
     }
 
     private static List<GridPoint2> allTiles(int width, int height) {

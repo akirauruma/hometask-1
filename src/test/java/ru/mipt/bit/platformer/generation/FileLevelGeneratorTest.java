@@ -59,6 +59,12 @@ class FileLevelGeneratorTest {
     }
 
     @Test
+    void fileLevelHasNoEnemyTanks() throws IOException {
+        LevelLayout layout = generatorFor(EXAMPLE).generate(10, 6);
+        assertEquals(List.of(), layout.getEnemyTanks());
+    }
+
+    @Test
     void ignoresEmptyLinesAndSurroundingSpaces() throws IOException {
         LevelLayout layout = generatorFor(List.of("  T_ ", "_X", "", "")).generate(2, 2);
         assertEquals(new GridPoint2(1, 0), layout.getPlayerStart());

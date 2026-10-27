@@ -88,4 +88,70 @@ class LevelTest {
         assertEquals(List.of(0.1f), first.updates);
         assertEquals(List.of(0.1f), second.updates);
     }
+
+    private static Tank tankAt(int x, int y, Level level) {
+        Tank tank = new Tank(new GridPoint2(x, y), Direction.RIGHT, 0.4f, level);
+        level.add(tank);
+        return tank;
+    }
+
+    @Test
+    void movingTankBlocksBothItsTilesForOtherTanks() {
+        Level level = new Level(5, 5);
+        Tank mover = tankAt(1, 1, level);
+        Tank behind = tankAt(0, 1, level);
+        Tank above = tankAt(2, 2, level);
+
+        // (1,1) -> (2,1)
+        mover.move(Direction.RIGHT);
+        behind.move(Direction.RIGHT);
+        above.move(Direction.DOWN);
+
+        assertTrue(mover.isMoving());
+        assertFalse(behind.isMoving());
+        assertFalse(above.isMoving());
+    }
+
+    @Test
+    void tileIsFreedWhenTheTankArrives() {
+        Level level = new Level(5, 5);
+        Tank tank = tankAt(1, 1, level);
+
+        tank.move(Direction.RIGHT);
+        level.update(1f);
+
+        assertFalse(tank.isMoving());
+        assertTrue(level.isFree(new GridPoint2(1, 1)));
+        assertFalse(level.isFree(new GridPoint2(2, 1)));
+    }
+
+    @Test
+    void twoTanksCannotDriveIntoTheSameTile() {
+        Level level = new Level(5, 5);
+        Tank left = tankAt(0, 1, level);
+        Tank right = tankAt(2, 1, level);
+
+        left.move(Direction.RIGHT);
+        right.move(Direction.LEFT);
+
+        assertTrue(left.isMoving());
+        assertFalse(right.isMoving());
+    }
+
+    @Test
+    void tankStopsAtTheLevelBorders() {
+        Level level = new Level(5, 5);
+        Tank bottomLeft = tankAt(0, 0, level);
+        Tank topRight = tankAt(4, 4, level);
+
+        for (Direction direction : new Direction[]{Direction.LEFT, Direction.DOWN}) {
+            bottomLeft.move(direction);
+            assertFalse(bottomLeft.isMoving(), direction.toString());
+            assertEquals(direction.getRotation(), bottomLeft.getRotation());
+        }
+        for (Direction direction : new Direction[]{Direction.RIGHT, Direction.UP}) {
+            topRight.move(direction);
+            assertFalse(topRight.isMoving(), direction.toString());
+        }
+    }
 }

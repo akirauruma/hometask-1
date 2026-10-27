@@ -57,7 +57,7 @@ public class FileLevelGenerator implements LevelGenerator {
         if (playerStart == null) {
             throw new IllegalArgumentException("No player in " + file);
         }
-        return new LevelLayout(playerStart, trees);
+        return new LevelLayout(playerStart, trees, List.of());
     }
 
     private List<String> readRows() {

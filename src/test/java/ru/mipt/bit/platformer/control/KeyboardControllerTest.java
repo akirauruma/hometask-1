@@ -52,7 +52,7 @@ class KeyboardControllerTest {
                 .bind(2, new RecordingCommand("b", log))
                 .bind(3, new RecordingCommand("c", log));
 
-        controller.processInput();
+        controller.nextCommands().forEach(Command::execute);
 
         assertEquals(List.of("b"), log);
     }
@@ -63,7 +63,7 @@ class KeyboardControllerTest {
         KeyboardController controller = new KeyboardController(new FakeInput())
                 .bind(1, new RecordingCommand("a", log));
 
-        controller.processInput();
+        controller.nextCommands().forEach(Command::execute);
 
         assertEquals(List.of(), log);
     }
@@ -75,7 +75,7 @@ class KeyboardControllerTest {
                 .bind(1, new RecordingCommand("first", log))
                 .bind(2, new RecordingCommand("second", log));
 
-        controller.processInput();
+        controller.nextCommands().forEach(Command::execute);
 
         assertEquals(List.of("first", "second"), log);
     }
