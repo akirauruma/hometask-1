@@ -3,50 +3,56 @@ package ru.mipt.bit.platformer.model;
 import com.badlogic.gdx.math.GridPoint2;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-/**
- * The playing field: its size, everything standing on it, and the rules of who may go where.
- * <p>
- * The level is the only place that knows about collisions, so a tank does not have to
- * ask the trees anything and the trees do not have to know about tanks.
- */
-public class Level {
+/** The field: its size and objects. Knows nothing about concrete object types. */
+public class Level implements CollisionChecker {
 
     private final int width;
     private final int height;
-    private final Tank playerTank;
-    private final List<Tree> trees;
+    private final List<GameObject> objects = new ArrayList<>();
+    private final List<LevelObserver> observers = new ArrayList<>();
+    private final List<GameObject> pendingRemoval = new ArrayList<>();
 
-    public Level(int width, int height, Tank playerTank, List<Tree> trees) {
+    public Level(int width, int height) {
         this.width = width;
         this.height = height;
-        this.playerTank = playerTank;
-        this.trees = new ArrayList<>(trees);
     }
 
-    /**
-     * Send the player tank one tile in the given direction.
-     * If the tile is taken or outside the field, the tank only turns, exactly as before.
-     */
-    public void movePlayerTank(Direction direction) {
-        if (playerTank.isMoving()) {
-            // a started move is never interrupted
-            return;
+    public void add(GameObject object) {
+        objects.add(object);
+        observers.forEach(observer -> observer.objectAdded(object));
+    }
+
+    public void remove(GameObject object) {
+        if (objects.contains(object) && !pendingRemoval.contains(object)) {
+            pendingRemoval.add(object);
         }
-        if (isFree(direction.apply(playerTank.getCoordinates()))) {
-            playerTank.move(direction);
-        } else {
-            playerTank.turn(direction);
-        }
+    }
+
+    public void subscribe(LevelObserver observer) {
+        observers.add(observer);
+        objects.forEach(observer::objectAdded);
+    }
+
+    List<GameObject> objects() {
+        return List.copyOf(objects);
     }
 
     public void update(float deltaTime) {
-        playerTank.update(deltaTime);
+        for (GameObject object : List.copyOf(objects)) {
+            object.update(deltaTime);
+        }
+        for (GameObject object : pendingRemoval) {
+            if (objects.remove(object)) {
+                observers.forEach(observer -> observer.objectRemoved(object));
+            }
+        }
+        pendingRemoval.clear();
     }
 
-    /** A tile is free if it is inside the field and nothing stands on it. */
+    /** Inside the field and no object stands on it or moves into it. */
+    @Override
     public boolean isFree(GridPoint2 coordinates) {
         return isInside(coordinates) && !isOccupied(coordinates);
     }
@@ -57,19 +63,11 @@ public class Level {
     }
 
     private boolean isOccupied(GridPoint2 coordinates) {
-        for (Tree tree : trees) {
-            if (tree.getCoordinates().equals(coordinates)) {
+        for (GameObject object : objects) {
+            if (object.getCoordinates().equals(coordinates) || object.getDestination().equals(coordinates)) {
                 return true;
             }
         }
         return false;
-    }
-
-    public Tank getPlayerTank() {
-        return playerTank;
-    }
-
-    public List<Tree> getTrees() {
-        return Collections.unmodifiableList(trees);
     }
 }
