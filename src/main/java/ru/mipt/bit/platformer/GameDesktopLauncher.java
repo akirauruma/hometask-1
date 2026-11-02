@@ -9,6 +9,7 @@ import ru.mipt.bit.platformer.control.CommandInvoker;
 import ru.mipt.bit.platformer.control.GdxInputProvider;
 import ru.mipt.bit.platformer.control.KeyboardController;
 import ru.mipt.bit.platformer.control.MoveCommand;
+import ru.mipt.bit.platformer.control.ShootCommand;
 import ru.mipt.bit.platformer.control.RandomController;
 import ru.mipt.bit.platformer.generation.FileLevelGenerator;
 import ru.mipt.bit.platformer.generation.LevelGenerator;
@@ -32,13 +33,12 @@ import static com.badlogic.gdx.Input.Keys.RIGHT;
 import static com.badlogic.gdx.Input.Keys.S;
 import static com.badlogic.gdx.Input.Keys.UP;
 import static com.badlogic.gdx.Input.Keys.W;
+import static com.badlogic.gdx.Input.Keys.SPACE;
 
 /** Wires everything together and runs the loop: input -> update -> render. */
 public class GameDesktopLauncher implements ApplicationListener {
 
     private static final String MAP_FILE = "level.tmx";
-    private static final String TANK_TEXTURE = "images/tank_blue.png";
-    private static final String TREE_TEXTURE = "images/greenTree.png";
     private static final float TANK_MOVEMENT_SPEED = 0.4f;
     private static final int RANDOM_TREE_COUNT = 10;
     private static final int RANDOM_ENEMY_COUNT = 3;
@@ -59,10 +59,11 @@ public class GameDesktopLauncher implements ApplicationListener {
         int width = levelRenderer.getLevelWidth();
         int height = levelRenderer.getLevelHeight();
         level = new Level(width, height);
+        level.subscribe(levelRenderer);
         LevelLayout layout = levelGenerator.generate(width, height);
 
         for (GridPoint2 treeCoordinates : layout.getTrees()) {
-            place(new Tree(treeCoordinates), TREE_TEXTURE);
+            place(new Tree(treeCoordinates));
         }
         Tank playerTank = placeTank(layout.getPlayerStart());
         invoker = new CommandInvoker().add(playerControls(playerTank));
@@ -73,12 +74,11 @@ public class GameDesktopLauncher implements ApplicationListener {
 
     private Tank placeTank(GridPoint2 start) {
         Tank tank = new Tank(start, Direction.RIGHT, TANK_MOVEMENT_SPEED, level);
-        place(tank, TANK_TEXTURE);
+        place(tank);
         return tank;
     }
 
     private static KeyboardController playerControls(Tank playerTank) {
-        // new action = new Command + one more bind()
         return new KeyboardController(new GdxInputProvider())
                 .bind(UP, new MoveCommand(playerTank, Direction.UP))
                 .bind(W, new MoveCommand(playerTank, Direction.UP))
@@ -87,12 +87,12 @@ public class GameDesktopLauncher implements ApplicationListener {
                 .bind(DOWN, new MoveCommand(playerTank, Direction.DOWN))
                 .bind(S, new MoveCommand(playerTank, Direction.DOWN))
                 .bind(RIGHT, new MoveCommand(playerTank, Direction.RIGHT))
-                .bind(D, new MoveCommand(playerTank, Direction.RIGHT));
+                .bind(D, new MoveCommand(playerTank, Direction.RIGHT))
+                .bind(SPACE, new ShootCommand(playerTank));
     }
 
-    private void place(GameObject object, String texturePath) {
+    private void place(GameObject object) {
         level.add(object);
-        levelRenderer.add(object, texturePath);
     }
 
     @Override

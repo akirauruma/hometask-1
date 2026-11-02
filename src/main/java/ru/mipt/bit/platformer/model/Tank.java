@@ -6,15 +6,20 @@ import static com.badlogic.gdx.math.MathUtils.isEqual;
 import static ru.mipt.bit.platformer.util.GdxGameUtils.continueProgress;
 
 /** Asks {@link CollisionChecker} before moving, knows nothing about the level. */
-public class Tank implements GameObject, Movable {
+public class Tank implements GameObject, Movable, Shooter {
+
+    private static final int INITIAL_HEALTH = 3;
+    private static final int BULLET_DAMAGE = 1;
 
     private final GridPoint2 coordinates;
     private final GridPoint2 destination;
     /** Seconds per tile. */
     private final float movementSpeed;
     private final CollisionChecker collisionChecker;
+    private final Level level;
     private Direction direction;
     private float movementProgress = 1f;
+    private int health = INITIAL_HEALTH;
 
     public Tank(GridPoint2 startCoordinates, Direction startDirection,
                 float movementSpeed, CollisionChecker collisionChecker) {
@@ -23,6 +28,25 @@ public class Tank implements GameObject, Movable {
         this.direction = startDirection;
         this.movementSpeed = movementSpeed;
         this.collisionChecker = collisionChecker;
+        this.level = collisionChecker instanceof Level ? (Level) collisionChecker : null;
+    }
+
+    @Override
+    public void shoot() {
+        if (level != null) {
+            level.add(new Bullet(direction.apply(coordinates), direction, BULLET_DAMAGE, level));
+        }
+    }
+
+    public void takeDamage(int damage) {
+        health -= damage;
+        if (health <= 0 && level != null) {
+            level.remove(this);
+        }
+    }
+
+    public int getHealth() {
+        return health;
     }
 
     /** Always turns; moves only if the tile is free. A started move is not interrupted. */

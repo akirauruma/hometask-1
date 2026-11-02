@@ -11,6 +11,8 @@ public class Level implements CollisionChecker {
     private final int width;
     private final int height;
     private final List<GameObject> objects = new ArrayList<>();
+    private final List<LevelObserver> observers = new ArrayList<>();
+    private final List<GameObject> pendingRemoval = new ArrayList<>();
 
     public Level(int width, int height) {
         this.width = width;
@@ -19,12 +21,34 @@ public class Level implements CollisionChecker {
 
     public void add(GameObject object) {
         objects.add(object);
+        observers.forEach(observer -> observer.objectAdded(object));
+    }
+
+    public void remove(GameObject object) {
+        if (objects.contains(object) && !pendingRemoval.contains(object)) {
+            pendingRemoval.add(object);
+        }
+    }
+
+    public void subscribe(LevelObserver observer) {
+        observers.add(observer);
+        objects.forEach(observer::objectAdded);
+    }
+
+    List<GameObject> objects() {
+        return List.copyOf(objects);
     }
 
     public void update(float deltaTime) {
-        for (GameObject object : objects) {
+        for (GameObject object : List.copyOf(objects)) {
             object.update(deltaTime);
         }
+        for (GameObject object : pendingRemoval) {
+            if (objects.remove(object)) {
+                observers.forEach(observer -> observer.objectRemoved(object));
+            }
+        }
+        pendingRemoval.clear();
     }
 
     /** Inside the field and no object stands on it or moves into it. */

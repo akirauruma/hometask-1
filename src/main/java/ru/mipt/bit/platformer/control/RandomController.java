@@ -2,6 +2,7 @@ package ru.mipt.bit.platformer.control;
 
 import ru.mipt.bit.platformer.model.Direction;
 import ru.mipt.bit.platformer.model.Movable;
+import ru.mipt.bit.platformer.model.Shooter;
 
 import java.util.List;
 import java.util.Random;
@@ -21,6 +22,9 @@ public class RandomController implements ControlStrategy {
 
     @Override
     public List<Command> nextCommands() {
+        if (movable instanceof Shooter shooter && random.nextBoolean()) {
+            return List.of(new ShootCommand(shooter));
+        }
         Direction direction = DIRECTIONS[random.nextInt(DIRECTIONS.length)];
         return List.of(new MoveCommand(movable, direction));
     }

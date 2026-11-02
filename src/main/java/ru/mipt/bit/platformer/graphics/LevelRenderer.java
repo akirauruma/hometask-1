@@ -11,6 +11,9 @@ import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.utils.Disposable;
 import ru.mipt.bit.platformer.model.GameObject;
+import ru.mipt.bit.platformer.model.Bullet;
+import ru.mipt.bit.platformer.model.LevelObserver;
+import ru.mipt.bit.platformer.model.Tank;
 import ru.mipt.bit.platformer.util.TileMovement;
 
 import java.util.ArrayList;
@@ -23,7 +26,11 @@ import static ru.mipt.bit.platformer.util.GdxGameUtils.createSingleLayerMapRende
 import static ru.mipt.bit.platformer.util.GdxGameUtils.getSingleLayer;
 
 /** Draws the map and the added {@link Renderable}s. */
-public class LevelRenderer implements Disposable {
+public class LevelRenderer implements Disposable, LevelObserver {
+
+    private static final String TANK_TEXTURE = "images/tank_blue.png";
+    private static final String TREE_TEXTURE = "images/greenTree.png";
+    private static final String BULLET_TEXTURE = "images/brick.png";
 
     private final Batch batch;
     private final TiledMap tiledMap;
@@ -33,6 +40,7 @@ public class LevelRenderer implements Disposable {
 
     private final Map<String, Texture> textures = new HashMap<>();
     private final List<Renderable> renderables = new ArrayList<>();
+    private final Map<GameObject, Renderable> objectRenderables = new HashMap<>();
 
     public LevelRenderer(String levelFile) {
         batch = new SpriteBatch();
@@ -55,6 +63,21 @@ public class LevelRenderer implements Disposable {
         // each texture file is loaded once and shared
         Texture texture = textures.computeIfAbsent(texturePath, Texture::new);
         add(new GameObjectGraphics(object, texture, tileMovement));
+    }
+
+    @Override
+    public void objectAdded(GameObject object) {
+        String texturePath = object instanceof Bullet ? BULLET_TEXTURE
+                : object instanceof Tank ? TANK_TEXTURE : TREE_TEXTURE;
+        Texture texture = textures.computeIfAbsent(texturePath, Texture::new);
+        Renderable renderable = new GameObjectGraphics(object, texture, tileMovement);
+        objectRenderables.put(object, renderable);
+        renderables.add(renderable);
+    }
+
+    @Override
+    public void objectRemoved(GameObject object) {
+        renderables.remove(objectRenderables.remove(object));
     }
 
     public void add(Renderable renderable) {
