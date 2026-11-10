@@ -11,38 +11,36 @@ import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.utils.Disposable;
 import ru.mipt.bit.platformer.model.GameObject;
-import ru.mipt.bit.platformer.model.Bullet;
 import ru.mipt.bit.platformer.model.LevelObserver;
-import ru.mipt.bit.platformer.model.Tank;
 import ru.mipt.bit.platformer.util.TileMovement;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static com.badlogic.gdx.graphics.GL20.GL_COLOR_BUFFER_BIT;
 import static ru.mipt.bit.platformer.util.GdxGameUtils.createSingleLayerMapRenderer;
 import static ru.mipt.bit.platformer.util.GdxGameUtils.getSingleLayer;
 
-/** Draws the map and the added {@link Renderable}s. */
+/**
+ * Draws the map and every object of the level it observes. An object gets drawn only through
+ * {@link #objectAdded} and stops being drawn when it leaves the level.
+ */
 public class LevelRenderer implements Disposable, LevelObserver {
-
-    private static final String TANK_TEXTURE = "images/tank_blue.png";
-    private static final String TREE_TEXTURE = "images/greenTree.png";
-    private static final String BULLET_TEXTURE = "images/brick.png";
 
     private final Batch batch;
     private final TiledMap tiledMap;
     private final MapRenderer tiledMapRenderer;
     private final TiledMapTileLayer groundLayer;
     private final TileMovement tileMovement;
+    private final TextureBindings textureBindings;
 
     private final Map<String, Texture> textures = new HashMap<>();
-    private final List<Renderable> renderables = new ArrayList<>();
-    private final Map<GameObject, Renderable> objectRenderables = new HashMap<>();
+    /** In the order objects were added, which is also the drawing order. */
+    private final Map<GameObject, Renderable> renderables = new LinkedHashMap<>();
 
-    public LevelRenderer(String levelFile) {
+    public LevelRenderer(String levelFile, TextureBindings textureBindings) {
+        this.textureBindings = textureBindings;
         batch = new SpriteBatch();
 
         tiledMap = new TmxMapLoader().load(levelFile);
@@ -59,29 +57,16 @@ public class LevelRenderer implements Disposable, LevelObserver {
         return groundLayer.getHeight();
     }
 
-    public void add(GameObject object, String texturePath) {
-        // each texture file is loaded once and shared
-        Texture texture = textures.computeIfAbsent(texturePath, Texture::new);
-        add(new GameObjectGraphics(object, texture, tileMovement));
-    }
-
     @Override
     public void objectAdded(GameObject object) {
-        String texturePath = object instanceof Bullet ? BULLET_TEXTURE
-                : object instanceof Tank ? TANK_TEXTURE : TREE_TEXTURE;
-        Texture texture = textures.computeIfAbsent(texturePath, Texture::new);
-        Renderable renderable = new GameObjectGraphics(object, texture, tileMovement);
-        objectRenderables.put(object, renderable);
-        renderables.add(renderable);
+        // each texture file is loaded once and shared
+        Texture texture = textures.computeIfAbsent(textureBindings.texturePathFor(object), Texture::new);
+        renderables.put(object, new GameObjectGraphics(object, texture, tileMovement));
     }
 
     @Override
     public void objectRemoved(GameObject object) {
-        renderables.remove(objectRenderables.remove(object));
-    }
-
-    public void add(Renderable renderable) {
-        renderables.add(renderable);
+        renderables.remove(object);
     }
 
     public void render() {
@@ -93,7 +78,7 @@ public class LevelRenderer implements Disposable, LevelObserver {
         // start recording all drawing commands
         batch.begin();
 
-        for (Renderable renderable : renderables) {
+        for (Renderable renderable : renderables.values()) {
             renderable.render(batch);
         }
 

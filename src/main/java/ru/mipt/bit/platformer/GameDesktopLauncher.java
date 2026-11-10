@@ -16,6 +16,8 @@ import ru.mipt.bit.platformer.generation.LevelGenerator;
 import ru.mipt.bit.platformer.generation.LevelLayout;
 import ru.mipt.bit.platformer.generation.RandomLevelGenerator;
 import ru.mipt.bit.platformer.graphics.LevelRenderer;
+import ru.mipt.bit.platformer.graphics.TextureBindings;
+import ru.mipt.bit.platformer.model.Bullet;
 import ru.mipt.bit.platformer.model.Direction;
 import ru.mipt.bit.platformer.model.GameObject;
 import ru.mipt.bit.platformer.model.Level;
@@ -39,6 +41,9 @@ import static com.badlogic.gdx.Input.Keys.SPACE;
 public class GameDesktopLauncher implements ApplicationListener {
 
     private static final String MAP_FILE = "level.tmx";
+    private static final String TANK_TEXTURE = "images/tank_blue.png";
+    private static final String TREE_TEXTURE = "images/greenTree.png";
+    private static final String BULLET_TEXTURE = "images/brick.png";
     private static final float TANK_MOVEMENT_SPEED = 0.4f;
     private static final int RANDOM_TREE_COUNT = 10;
     private static final int RANDOM_ENEMY_COUNT = 3;
@@ -55,25 +60,31 @@ public class GameDesktopLauncher implements ApplicationListener {
 
     @Override
     public void create() {
-        levelRenderer = new LevelRenderer(MAP_FILE);
+        levelRenderer = new LevelRenderer(MAP_FILE, new TextureBindings()
+                .bind(Tank.class, TANK_TEXTURE)
+                .bind(Tree.class, TREE_TEXTURE)
+                .bind(Bullet.class, BULLET_TEXTURE));
         int width = levelRenderer.getLevelWidth();
         int height = levelRenderer.getLevelHeight();
         level = new Level(width, height);
+        invoker = new CommandInvoker();
         level.subscribe(levelRenderer);
+        level.subscribe(invoker);
         LevelLayout layout = levelGenerator.generate(width, height);
 
         for (GridPoint2 treeCoordinates : layout.getTrees()) {
             place(new Tree(treeCoordinates));
         }
         Tank playerTank = placeTank(layout.getPlayerStart());
-        invoker = new CommandInvoker().add(playerControls(playerTank));
+        invoker.add(playerTank, playerControls(playerTank));
         for (GridPoint2 enemyStart : layout.getEnemyTanks()) {
-            invoker.add(new RandomController(placeTank(enemyStart), random));
+            Tank enemyTank = placeTank(enemyStart);
+            invoker.add(enemyTank, new RandomController(enemyTank, random));
         }
     }
 
     private Tank placeTank(GridPoint2 start) {
-        Tank tank = new Tank(start, Direction.RIGHT, TANK_MOVEMENT_SPEED, level);
+        Tank tank = new Tank(start, Direction.RIGHT, TANK_MOVEMENT_SPEED, level, level);
         place(tank);
         return tank;
     }

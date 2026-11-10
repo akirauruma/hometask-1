@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -53,7 +54,7 @@ class LevelTest {
     @Test
     void destinationOfAMovingObjectIsNotFree() {
         Level level = new Level(5, 5);
-        Tank tank = new Tank(new GridPoint2(1, 1), Direction.RIGHT, 0.4f, level);
+        Tank tank = new Tank(new GridPoint2(1, 1), Direction.RIGHT, 0.4f, level, level);
         level.add(tank);
 
         tank.move(Direction.UP);
@@ -65,7 +66,7 @@ class LevelTest {
     @Test
     void tankOnTheLevelOnlyTurnsInFrontOfATree() {
         Level level = new Level(5, 5);
-        Tank tank = new Tank(new GridPoint2(1, 1), Direction.RIGHT, 0.4f, level);
+        Tank tank = new Tank(new GridPoint2(1, 1), Direction.RIGHT, 0.4f, level, level);
         level.add(tank);
         level.add(new Tree(new GridPoint2(1, 2)));
 
@@ -90,7 +91,7 @@ class LevelTest {
     }
 
     private static Tank tankAt(int x, int y, Level level) {
-        Tank tank = new Tank(new GridPoint2(x, y), Direction.RIGHT, 0.4f, level);
+        Tank tank = new Tank(new GridPoint2(x, y), Direction.RIGHT, 0.4f, level, level);
         level.add(tank);
         return tank;
     }
@@ -153,5 +154,30 @@ class LevelTest {
             topRight.move(direction);
             assertFalse(topRight.isMoving(), direction.toString());
         }
+    }
+
+    @Test
+    void objectAtFindsWhatStandsOnTheTileOrMovesIntoIt() {
+        Level level = new Level(5, 5);
+        Tank tank = tankAt(1, 1, level);
+
+        tank.move(Direction.UP);
+
+        assertEquals(Optional.of(tank), level.objectAt(new GridPoint2(1, 1)));
+        assertEquals(Optional.of(tank), level.objectAt(new GridPoint2(1, 2)));
+        assertEquals(Optional.empty(), level.objectAt(new GridPoint2(3, 3)));
+    }
+
+    @Test
+    void removedObjectStopsActingAndBlockingAtOnce() {
+        Level level = new Level(5, 5);
+        RecordingObject object = new RecordingObject();
+        level.add(object);
+
+        level.remove(object);
+
+        assertTrue(level.isFree(new GridPoint2(0, 0)));
+        level.update(0.1f);
+        assertEquals(List.of(), object.updates);
     }
 }

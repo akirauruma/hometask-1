@@ -2,37 +2,46 @@ package ru.mipt.bit.platformer.model;
 
 import com.badlogic.gdx.math.GridPoint2;
 
+import java.util.Optional;
+
 import static com.badlogic.gdx.math.MathUtils.isEqual;
 import static ru.mipt.bit.platformer.util.GdxGameUtils.continueProgress;
 
-public class Bullet implements GameObject {
+/**
+ * Flies tile by tile. Before entering a tile it ends at the border, or hits whatever stands
+ * on the tile or moves into it, or flies on. It never looks at the tile it is already on.
+ */
+public class Bullet implements GameObject, Damageable {
 
-    private static final float MOVEMENT_SPEED = 0.1f;
+    /** Seconds per tile. */
+    static final float MOVEMENT_SPEED = 0.1f;
 
     private final GridPoint2 coordinates;
     private final GridPoint2 destination;
     private final Direction direction;
     private final int damage;
-    private final Level level;
+    private final Battlefield battlefield;
     private float movementProgress = 1f;
 
-    public Bullet(GridPoint2 startCoordinates, Direction direction, int damage, Level level) {
+    public Bullet(GridPoint2 startCoordinates, Direction direction, int damage, Battlefield battlefield) {
         this.coordinates = new GridPoint2(startCoordinates);
         this.destination = new GridPoint2(startCoordinates);
         this.direction = direction;
         this.damage = damage;
-        this.level = level;
+        this.battlefield = battlefield;
     }
 
     @Override
     public void update(float deltaTime) {
-        if (collide()) {
-            return;
-        }
         if (!isMoving()) {
             GridPoint2 next = direction.apply(coordinates);
-            if (!level.isFree(next)) {
-                level.remove(this);
+            if (!battlefield.isInside(next)) {
+                battlefield.remove(this);
+                return;
+            }
+            Optional<GameObject> obstacle = battlefield.objectAt(next);
+            if (obstacle.isPresent()) {
+                hit(obstacle.get());
                 return;
             }
             destination.set(next);
@@ -41,26 +50,21 @@ public class Bullet implements GameObject {
         movementProgress = continueProgress(movementProgress, deltaTime, MOVEMENT_SPEED);
         if (!isMoving()) {
             coordinates.set(destination);
-            collide();
         }
     }
 
-    private boolean collide() {
-        for (GameObject object : level.objects()) {
-            if (object == this || !object.getCoordinates().equals(coordinates)
-                    && !object.getDestination().equals(coordinates)) {
-                continue;
-            }
-            if (object instanceof Tank) {
-                ((Tank) object).takeDamage(damage);
-            }
-            level.remove(this);
-            if (object instanceof Bullet) {
-                level.remove(object);
-            }
-            return true;
+    /** The target takes the damage first (another bullet is destroyed by it), then this bullet is gone. */
+    private void hit(GameObject target) {
+        if (target instanceof Damageable damageable) {
+            damageable.takeDamage(damage);
         }
-        return false;
+        battlefield.remove(this);
+    }
+
+    /** Anything that hits a bullet destroys it. */
+    @Override
+    public void takeDamage(int damage) {
+        battlefield.remove(this);
     }
 
     private boolean isMoving() {
