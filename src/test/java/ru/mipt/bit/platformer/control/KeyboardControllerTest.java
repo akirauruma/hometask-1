@@ -14,17 +14,35 @@ class KeyboardControllerTest {
     /** Fake input: only the keys we say are "pressed" report as pressed. */
     private static class FakeInput implements InputProvider {
         private final Set<Integer> pressed = new HashSet<>();
+        private final Set<Integer> justPressed = new HashSet<>();
 
         FakeInput press(int... keys) {
             for (int key : keys) {
                 pressed.add(key);
+                justPressed.add(key);
             }
+            return this;
+        }
+
+        FakeInput release(int key) {
+            pressed.remove(key);
+            return this;
+        }
+
+        /** Keys still held are no longer "just" pressed. */
+        FakeInput nextFrame() {
+            justPressed.clear();
             return this;
         }
 
         @Override
         public boolean isPressed(int keyCode) {
             return pressed.contains(keyCode);
+        }
+
+        @Override
+        public boolean isJustPressed(int keyCode) {
+            return justPressed.contains(keyCode);
         }
     }
 
@@ -78,5 +96,55 @@ class KeyboardControllerTest {
         controller.nextCommands().forEach(Command::execute);
 
         assertEquals(List.of("first", "second"), log);
+    }
+
+    @Test
+    void onPressCommandRunsOncePerPressNotEveryFrameWhileHeld() {
+        List<String> log = new ArrayList<>();
+        FakeInput input = new FakeInput();
+        KeyboardController controller = new KeyboardController(input)
+                .bindOnPress(1, new RecordingCommand("toggle", log));
+
+        input.press(1);
+        controller.nextCommands().forEach(Command::execute);
+        input.nextFrame();
+        controller.nextCommands().forEach(Command::execute);
+        assertEquals(List.of("toggle"), log);
+
+        input.release(1).nextFrame();
+        controller.nextCommands().forEach(Command::execute);
+        assertEquals(List.of("toggle"), log);
+
+        input.press(1);
+        controller.nextCommands().forEach(Command::execute);
+        assertEquals(List.of("toggle", "toggle"), log);
+    }
+
+    @Test
+    void onPressCommandRunsForATapShorterThanAFrame() {
+        List<String> log = new ArrayList<>();
+        FakeInput input = new FakeInput();
+        KeyboardController controller = new KeyboardController(input)
+                .bindOnPress(1, new RecordingCommand("toggle", log));
+
+        input.press(1).release(1);
+        controller.nextCommands().forEach(Command::execute);
+
+        assertEquals(List.of("toggle"), log);
+    }
+
+    @Test
+    void heldAndOnPressBindingsWorkTogether() {
+        List<String> log = new ArrayList<>();
+        FakeInput input = new FakeInput().press(1, 2);
+        KeyboardController controller = new KeyboardController(input)
+                .bind(1, new RecordingCommand("move", log))
+                .bindOnPress(2, new RecordingCommand("toggle", log));
+
+        controller.nextCommands().forEach(Command::execute);
+        input.nextFrame();
+        controller.nextCommands().forEach(Command::execute);
+
+        assertEquals(List.of("move", "toggle", "move"), log);
     }
 }

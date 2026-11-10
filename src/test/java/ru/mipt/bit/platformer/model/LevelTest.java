@@ -54,7 +54,7 @@ class LevelTest {
     @Test
     void destinationOfAMovingObjectIsNotFree() {
         Level level = new Level(5, 5);
-        Tank tank = new Tank(new GridPoint2(1, 1), Direction.RIGHT, 0.4f, level, level);
+        Tank tank = new Tank(new GridPoint2(1, 1), Direction.RIGHT, 0.4f, 100, level, level);
         level.add(tank);
 
         tank.move(Direction.UP);
@@ -66,7 +66,7 @@ class LevelTest {
     @Test
     void tankOnTheLevelOnlyTurnsInFrontOfATree() {
         Level level = new Level(5, 5);
-        Tank tank = new Tank(new GridPoint2(1, 1), Direction.RIGHT, 0.4f, level, level);
+        Tank tank = new Tank(new GridPoint2(1, 1), Direction.RIGHT, 0.4f, 100, level, level);
         level.add(tank);
         level.add(new Tree(new GridPoint2(1, 2)));
 
@@ -91,7 +91,7 @@ class LevelTest {
     }
 
     private static Tank tankAt(int x, int y, Level level) {
-        Tank tank = new Tank(new GridPoint2(x, y), Direction.RIGHT, 0.4f, level, level);
+        Tank tank = new Tank(new GridPoint2(x, y), Direction.RIGHT, 0.4f, 100, level, level);
         level.add(tank);
         return tank;
     }

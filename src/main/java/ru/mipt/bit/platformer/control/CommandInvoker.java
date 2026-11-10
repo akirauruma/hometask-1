@@ -15,9 +15,15 @@ public class CommandInvoker implements LevelObserver {
 
     private final List<Controlled> controlled = new ArrayList<>();
 
-    /** Returns {@code this} for chaining. */
+    /** The strategy is dropped when the object leaves the level. Returns {@code this} for chaining. */
     public CommandInvoker add(GameObject object, ControlStrategy strategy) {
         controlled.add(new Controlled(object, strategy));
+        return this;
+    }
+
+    /** A strategy of the whole game, e.g. display keys, that works as long as the game runs. */
+    public CommandInvoker add(ControlStrategy strategy) {
+        controlled.add(new Controlled(null, strategy));
         return this;
     }
 
@@ -39,6 +45,7 @@ public class CommandInvoker implements LevelObserver {
         controlled.removeIf(entry -> entry.object() == object);
     }
 
+    /** {@code object} is null for a strategy of the whole game. */
     private record Controlled(GameObject object, ControlStrategy strategy) {
     }
 }

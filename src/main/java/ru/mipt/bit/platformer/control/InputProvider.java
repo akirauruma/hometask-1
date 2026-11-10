@@ -4,4 +4,7 @@ package ru.mipt.bit.platformer.control;
 public interface InputProvider {
 
     boolean isPressed(int keyCode);
+
+    /** Went down since the previous frame, even if it is already released again. */
+    boolean isJustPressed(int keyCode);
 }

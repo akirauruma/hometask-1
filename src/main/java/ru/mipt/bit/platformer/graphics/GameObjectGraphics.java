@@ -32,4 +32,9 @@ public class GameObjectGraphics implements Renderable {
                 rectangle, object.getCoordinates(), object.getDestination(), object.getMovementProgress());
         drawTextureRegionUnscaled(batch, region, rectangle, object.getRotation());
     }
+
+    @Override
+    public Rectangle getBounds() {
+        return new Rectangle(rectangle);
+    }
 }

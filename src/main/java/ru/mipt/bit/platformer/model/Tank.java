@@ -9,10 +9,9 @@ import static ru.mipt.bit.platformer.util.GdxGameUtils.continueProgress;
  * Asks {@link CollisionChecker} before moving, fires and leaves the level through {@link Battlefield}.
  * Knows nothing about the level itself. A destroyed tank does nothing.
  */
-public class Tank implements GameObject, Movable, Shooter, Damageable {
+public class Tank implements GameObject, Movable, Shooter, Damageable, HasHealth {
 
-    static final int INITIAL_HEALTH = 3;
-    static final int BULLET_DAMAGE = 1;
+    static final int BULLET_DAMAGE = 30;
     /** Seconds between shots: a bullet needs two tile times to clear the tile in front of the tank. */
     static final float RELOAD_TIME = 0.5f;
 
@@ -23,12 +22,19 @@ public class Tank implements GameObject, Movable, Shooter, Damageable {
     private final CollisionChecker collisionChecker;
     private final Battlefield battlefield;
     private Direction direction;
+    private final int maxHealth;
     private float movementProgress = 1f;
-    private int health = INITIAL_HEALTH;
+    private int health;
     private float reloadLeft = 0f;
 
-    public Tank(GridPoint2 startCoordinates, Direction startDirection, float movementSpeed,
+    /** {@code health} is both the starting and the maximum health. */
+    public Tank(GridPoint2 startCoordinates, Direction startDirection, float movementSpeed, int health,
                 CollisionChecker collisionChecker, Battlefield battlefield) {
+        if (health <= 0) {
+            throw new IllegalArgumentException("Health must be positive: " + health);
+        }
+        this.maxHealth = health;
+        this.health = health;
         this.coordinates = new GridPoint2(startCoordinates);
         this.destination = new GridPoint2(startCoordinates);
         this.direction = startDirection;
@@ -55,7 +61,7 @@ public class Tank implements GameObject, Movable, Shooter, Damageable {
         if (!isAlive()) {
             return;
         }
-        health -= damage;
+        health = Math.max(0, health - damage);
         if (!isAlive()) {
             battlefield.remove(this);
         }
@@ -65,8 +71,14 @@ public class Tank implements GameObject, Movable, Shooter, Damageable {
         return health > 0;
     }
 
+    @Override
     public int getHealth() {
         return health;
+    }
+
+    @Override
+    public int getMaxHealth() {
+        return maxHealth;
     }
 
     /** Always turns; moves only if the tile is free. A started move is not interrupted. */

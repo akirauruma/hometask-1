@@ -24,7 +24,8 @@ import static ru.mipt.bit.platformer.util.GdxGameUtils.getSingleLayer;
 
 /**
  * Draws the map and every object of the level it observes. An object gets drawn only through
- * {@link #objectAdded} and stops being drawn when it leaves the level.
+ * {@link #objectAdded}, with its renderable passed through the {@link Decoration},
+ * and stops being drawn when it leaves the level.
  */
 public class LevelRenderer implements Disposable, LevelObserver {
 
@@ -34,13 +35,15 @@ public class LevelRenderer implements Disposable, LevelObserver {
     private final TiledMapTileLayer groundLayer;
     private final TileMovement tileMovement;
     private final TextureBindings textureBindings;
+    private final Decoration decoration;
 
     private final Map<String, Texture> textures = new HashMap<>();
     /** In the order objects were added, which is also the drawing order. */
     private final Map<GameObject, Renderable> renderables = new LinkedHashMap<>();
 
-    public LevelRenderer(String levelFile, TextureBindings textureBindings) {
+    public LevelRenderer(String levelFile, TextureBindings textureBindings, Decoration decoration) {
         this.textureBindings = textureBindings;
+        this.decoration = decoration;
         batch = new SpriteBatch();
 
         tiledMap = new TmxMapLoader().load(levelFile);
@@ -61,7 +64,8 @@ public class LevelRenderer implements Disposable, LevelObserver {
     public void objectAdded(GameObject object) {
         // each texture file is loaded once and shared
         Texture texture = textures.computeIfAbsent(textureBindings.texturePathFor(object), Texture::new);
-        renderables.put(object, new GameObjectGraphics(object, texture, tileMovement));
+        Renderable graphics = new GameObjectGraphics(object, texture, tileMovement);
+        renderables.put(object, decoration.decorate(object, graphics));
     }
 
     @Override

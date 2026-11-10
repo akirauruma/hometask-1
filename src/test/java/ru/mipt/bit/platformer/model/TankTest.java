@@ -9,11 +9,13 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TankTest {
 
     private static final float SPEED = 0.4f;
+    private static final int HEALTH = 90;
     private static final CollisionChecker EVERYTHING_FREE = coordinates -> true;
     private static final CollisionChecker EVERYTHING_BLOCKED = coordinates -> false;
 
@@ -44,11 +46,11 @@ class TankTest {
     }
 
     private Tank tankAt(int x, int y, CollisionChecker collisionChecker) {
-        return new Tank(new GridPoint2(x, y), Direction.RIGHT, SPEED, collisionChecker, new RecordingBattlefield());
+        return new Tank(new GridPoint2(x, y), Direction.RIGHT, SPEED, HEALTH, collisionChecker, new RecordingBattlefield());
     }
 
     private Tank tankOn(int x, int y, Battlefield battlefield) {
-        return new Tank(new GridPoint2(x, y), Direction.RIGHT, SPEED, EVERYTHING_FREE, battlefield);
+        return new Tank(new GridPoint2(x, y), Direction.RIGHT, SPEED, HEALTH, EVERYTHING_FREE, battlefield);
     }
 
     @Test
@@ -64,7 +66,7 @@ class TankTest {
     @Test
     void copiesItsStartPointSoLaterMutationsDoNotLeakIn() {
         GridPoint2 start = new GridPoint2(1, 1);
-        Tank tank = new Tank(start, Direction.RIGHT, SPEED, EVERYTHING_FREE, new RecordingBattlefield());
+        Tank tank = new Tank(start, Direction.RIGHT, SPEED, HEALTH, EVERYTHING_FREE, new RecordingBattlefield());
         start.set(9, 9);
         assertEquals(new GridPoint2(1, 1), tank.getCoordinates());
     }
@@ -123,7 +125,7 @@ class TankTest {
 
     @Test
     void movementSpeedIsAParameter() {
-        Tank slowTank = new Tank(new GridPoint2(1, 1), Direction.RIGHT, 2f, EVERYTHING_FREE,
+        Tank slowTank = new Tank(new GridPoint2(1, 1), Direction.RIGHT, 2f, HEALTH, EVERYTHING_FREE,
                 new RecordingBattlefield());
         slowTank.move(Direction.RIGHT);
         slowTank.update(SPEED);
@@ -179,9 +181,7 @@ class TankTest {
         RecordingBattlefield battlefield = new RecordingBattlefield();
         Tank tank = tankOn(1, 1, battlefield);
 
-        for (int hit = 1; hit < Tank.INITIAL_HEALTH; hit++) {
-            tank.takeDamage(1);
-        }
+        tank.takeDamage(HEALTH - 1);
         assertTrue(tank.isAlive());
         assertEquals(List.of(), battlefield.removed);
 
@@ -195,7 +195,7 @@ class TankTest {
     void destroyedTankNeitherShootsNorMovesNorTurns() {
         RecordingBattlefield battlefield = new RecordingBattlefield();
         Tank tank = tankOn(1, 1, battlefield);
-        tank.takeDamage(Tank.INITIAL_HEALTH);
+        tank.takeDamage(HEALTH);
 
         tank.shoot();
         tank.move(Direction.UP);
@@ -203,5 +203,32 @@ class TankTest {
         assertEquals(List.of(), battlefield.added);
         assertFalse(tank.isMoving());
         assertEquals(Direction.RIGHT.getRotation(), tank.getRotation());
+    }
+
+    @Test
+    void startsWithTheGivenHealthWhichIsAlsoItsMaximum() {
+        Tank tank = tankAt(1, 1, EVERYTHING_FREE);
+
+        assertEquals(HEALTH, tank.getHealth());
+        assertEquals(HEALTH, tank.getMaxHealth());
+    }
+
+    @Test
+    void damageLowersHealthButNotTheMaximumAndNeverBelowZero() {
+        Tank tank = tankAt(1, 1, EVERYTHING_FREE);
+
+        tank.takeDamage(Tank.BULLET_DAMAGE);
+        assertEquals(HEALTH - Tank.BULLET_DAMAGE, tank.getHealth());
+        assertEquals(HEALTH, tank.getMaxHealth());
+
+        tank.takeDamage(HEALTH);
+        assertEquals(0, tank.getHealth());
+    }
+
+    @Test
+    void healthMustBePositive() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new Tank(new GridPoint2(1, 1), Direction.RIGHT, SPEED, 0, EVERYTHING_FREE,
+                        new RecordingBattlefield()));
     }
 }

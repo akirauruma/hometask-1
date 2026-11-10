@@ -84,4 +84,22 @@ class CommandInvokerTest {
 
         assertEquals(List.of("stays"), log);
     }
+
+    @Test
+    void strategyOfTheWholeGameStaysWhenObjectsLeave() {
+        List<String> log = new ArrayList<>();
+        Level level = new Level(5, 5);
+        GameObject player = objectAt(0, 0);
+        level.add(player);
+        CommandInvoker invoker = new CommandInvoker()
+                .add(() -> List.of(() -> log.add("toggle health bars")))
+                .add(player, () -> List.of(() -> log.add("player")));
+        level.subscribe(invoker);
+
+        level.remove(player);
+        level.update(0f);
+        invoker.invokeAll();
+
+        assertEquals(List.of("toggle health bars"), log);
+    }
 }

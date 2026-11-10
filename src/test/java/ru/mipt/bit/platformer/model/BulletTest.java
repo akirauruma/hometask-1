@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class BulletTest {
 
+    private static final int HEALTH = 100;
     /** Enough frames for a bullet to cross any test field. */
     private static final int FLIGHT_FRAMES = 10;
 
@@ -37,7 +38,7 @@ class BulletTest {
     }
 
     private static Tank tankAt(Level level, int x, int y, Direction direction) {
-        Tank tank = new Tank(new GridPoint2(x, y), direction, 0.4f, level, level);
+        Tank tank = new Tank(new GridPoint2(x, y), direction, 0.4f, HEALTH, level, level);
         level.add(tank);
         return tank;
     }
@@ -64,8 +65,8 @@ class BulletTest {
         shooter.shoot();
         level.update(Bullet.MOVEMENT_SPEED);
 
-        assertEquals(Tank.INITIAL_HEALTH - 1, target.getHealth());
-        assertEquals(Tank.INITIAL_HEALTH, shooter.getHealth());
+        assertEquals(HEALTH - Tank.BULLET_DAMAGE, target.getHealth());
+        assertEquals(HEALTH, shooter.getHealth());
         assertEquals(0, bullets.count());
     }
 
@@ -82,8 +83,8 @@ class BulletTest {
         assertEquals(1, bullets.count());
         fly(level);
 
-        assertEquals(Tank.INITIAL_HEALTH - 1, target.getHealth());
-        assertEquals(Tank.INITIAL_HEALTH, shooter.getHealth());
+        assertEquals(HEALTH - Tank.BULLET_DAMAGE, target.getHealth());
+        assertEquals(HEALTH, shooter.getHealth());
         assertEquals(0, bullets.count());
     }
 
@@ -105,8 +106,8 @@ class BulletTest {
         fly(level);
 
         assertEquals(0, bullets.count());
-        assertEquals(Tank.INITIAL_HEALTH, left.getHealth());
-        assertEquals(Tank.INITIAL_HEALTH, right.getHealth());
+        assertEquals(HEALTH, left.getHealth());
+        assertEquals(HEALTH, right.getHealth());
     }
 
     @Test
@@ -127,8 +128,8 @@ class BulletTest {
         fly(level);
 
         assertEquals(0, bullets.count());
-        assertEquals(Tank.INITIAL_HEALTH, left.getHealth());
-        assertEquals(Tank.INITIAL_HEALTH, right.getHealth());
+        assertEquals(HEALTH, left.getHealth());
+        assertEquals(HEALTH, right.getHealth());
     }
 
     @Test
@@ -142,7 +143,7 @@ class BulletTest {
         fly(level);
 
         assertEquals(0, bullets.count());
-        assertEquals(Tank.INITIAL_HEALTH, shooter.getHealth());
+        assertEquals(HEALTH, shooter.getHealth());
     }
 
     @Test
@@ -172,7 +173,7 @@ class BulletTest {
         shooter.shoot();
         fly(level);
 
-        assertEquals(Tank.INITIAL_HEALTH, shooter.getHealth());
+        assertEquals(HEALTH, shooter.getHealth());
         assertEquals(0, bullets.count());
     }
 
@@ -184,7 +185,8 @@ class BulletTest {
         Tank shooter = tankAt(level, 0, 1, Direction.RIGHT);
         Tank target = tankAt(level, 3, 1, Direction.LEFT);
 
-        for (int shot = 0; shot < Tank.INITIAL_HEALTH; shot++) {
+        int hitsToDestroy = (HEALTH + Tank.BULLET_DAMAGE - 1) / Tank.BULLET_DAMAGE;
+        for (int shot = 0; shot < hitsToDestroy; shot++) {
             shooter.shoot();
             fly(level);
         }
@@ -193,7 +195,7 @@ class BulletTest {
 
         assertFalse(target.isAlive());
         assertEquals(Optional.empty(), level.objectAt(new GridPoint2(3, 1)));
-        assertEquals(Tank.INITIAL_HEALTH, shooter.getHealth());
+        assertEquals(HEALTH, shooter.getHealth());
         assertEquals(0, bullets.count());
     }
 
