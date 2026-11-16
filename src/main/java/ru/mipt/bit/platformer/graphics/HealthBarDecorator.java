@@ -5,7 +5,7 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Rectangle;
 import ru.mipt.bit.platformer.model.HasHealth;
 
-/** Decorator: draws the wrapped renderable and, while health bars are shown, a health bar above it. */
+/** Infrastructure, Decorator: draws the wrapped renderable and, while health bars are shown, a health bar above it. */
 public class HealthBarDecorator implements Renderable {
 
     private static final float BAR_HEIGHT = 8f;

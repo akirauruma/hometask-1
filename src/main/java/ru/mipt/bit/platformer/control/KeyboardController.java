@@ -6,7 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Player control. A command bound with {@link #bind} runs every frame while its key is held,
+ * Primary adapter: turns keys from the {@link InputProvider} port into commands.
+ * A command bound with {@link #bind} runs every frame while its key is held,
  * one bound with {@link #bindOnPress} runs once per key press.
  */
 public class KeyboardController implements ControlStrategy {

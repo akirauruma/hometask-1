@@ -7,6 +7,7 @@ import ru.mipt.bit.platformer.model.GameObject;
 import ru.mipt.bit.platformer.model.HasHealth;
 
 /**
+ * Infrastructure adapter of the {@link Toggleable} port.
  * One switch for the health bars of every object with health. Wraps their renderables into
  * {@link HealthBarDecorator}s, which draw a bar only while the bars are shown. Hidden at start.
  */

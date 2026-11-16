@@ -7,7 +7,7 @@ import ru.mipt.bit.platformer.model.Shooter;
 import java.util.List;
 import java.util.Random;
 
-/** Simplest AI: every frame orders a move in a random direction. */
+/** Application, AI behind the {@link ControlStrategy} port: every frame orders a move in a random direction. */
 public class RandomController implements ControlStrategy {
 
     private static final Direction[] DIRECTIONS = Direction.values();

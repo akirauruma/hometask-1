@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-/** The field: its size and objects. Knows nothing about concrete object types. */
+/** Domain entity: the field, its size and objects. Knows nothing about concrete object types. */
 public class Level implements CollisionChecker, Battlefield {
 
     private final int width;

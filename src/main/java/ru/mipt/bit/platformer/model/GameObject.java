@@ -2,7 +2,7 @@ package ru.mipt.bit.platformer.model;
 
 import com.badlogic.gdx.math.GridPoint2;
 
-/** An object on a tile. The defaults describe a static object. */
+/** Domain interface: an object on a tile. The defaults describe a static object. */
 public interface GameObject {
 
     GridPoint2 getCoordinates();

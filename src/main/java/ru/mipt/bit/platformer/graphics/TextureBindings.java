@@ -5,7 +5,10 @@ import ru.mipt.bit.platformer.model.GameObject;
 import java.util.HashMap;
 import java.util.Map;
 
-/** Which texture draws which object class. A class without a texture is an error, not a default sprite. */
+/**
+ * Infrastructure: which texture draws which object class.
+ * A class without a texture is an error, not a default sprite.
+ */
 public class TextureBindings {
 
     private final Map<Class<? extends GameObject>, String> texturePaths = new HashMap<>();

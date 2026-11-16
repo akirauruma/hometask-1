@@ -3,7 +3,7 @@ package ru.mipt.bit.platformer.control;
 import ru.mipt.bit.platformer.model.Direction;
 import ru.mipt.bit.platformer.model.Movable;
 
-/** Moves any {@link Movable} in a fixed direction. */
+/** Application use case: moves any {@link Movable} in a fixed direction. */
 public class MoveCommand implements Command {
 
     private final Movable movable;

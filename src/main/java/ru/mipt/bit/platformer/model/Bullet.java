@@ -8,7 +8,7 @@ import static com.badlogic.gdx.math.MathUtils.isEqual;
 import static ru.mipt.bit.platformer.util.GdxGameUtils.continueProgress;
 
 /**
- * Flies tile by tile. Before entering a tile it ends at the border, or hits whatever stands
+ * Domain entity. Flies tile by tile. Before entering a tile it ends at the border, or hits whatever stands
  * on the tile or moves into it, or flies on. It never looks at the tile it is already on.
  */
 public class Bullet implements GameObject, Damageable {

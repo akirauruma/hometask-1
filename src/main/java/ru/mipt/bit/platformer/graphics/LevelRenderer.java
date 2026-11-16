@@ -23,6 +23,7 @@ import static ru.mipt.bit.platformer.util.GdxGameUtils.createSingleLayerMapRende
 import static ru.mipt.bit.platformer.util.GdxGameUtils.getSingleLayer;
 
 /**
+ * Infrastructure adapter of the {@link LevelObserver} port.
  * Draws the map and every object of the level it observes. An object gets drawn only through
  * {@link #objectAdded}, with its renderable passed through the {@link Decoration},
  * and stops being drawn when it leaves the level.

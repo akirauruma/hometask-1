@@ -1,6 +1,6 @@
 package ru.mipt.bit.platformer.control;
 
-/** Switches a {@link Toggleable} on or off, e.g. the health bars. */
+/** Application use case: switches a {@link Toggleable} on or off, e.g. the health bars. */
 public class ToggleCommand implements Command {
 
     private final Toggleable toggleable;

@@ -41,7 +41,7 @@ import static com.badlogic.gdx.Input.Keys.W;
 import static com.badlogic.gdx.Input.Keys.SPACE;
 import static ru.mipt.bit.platformer.util.GdxGameUtils.createWhitePixelTexture;
 
-/** Wires everything together and runs the loop: input -> update -> render. */
+/** Infrastructure: composition root and primary adapter of libGDX, runs the loop: input -> update -> render. */
 public class GameDesktopLauncher implements ApplicationListener {
 
     private static final String MAP_FILE = "level.tmx";

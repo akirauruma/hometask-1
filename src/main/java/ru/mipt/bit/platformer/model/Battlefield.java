@@ -5,8 +5,8 @@ import com.badlogic.gdx.math.GridPoint2;
 import java.util.Optional;
 
 /**
- * What objects that spawn, hit and destroy other objects need from the level.
- * Passed explicitly, so nobody has to downcast a {@link CollisionChecker}.
+ * Domain interface, implemented by {@link Level}. What objects that spawn, hit and destroy
+ * other objects need from the level. Passed explicitly, so nobody has to downcast a {@link CollisionChecker}.
  */
 public interface Battlefield {
 

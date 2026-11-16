@@ -1,13 +1,16 @@
 package ru.mipt.bit.platformer.model;
 
 import com.badlogic.gdx.math.GridPoint2;
+import ru.mipt.bit.platformer.model.state.HealthState;
+import ru.mipt.bit.platformer.model.state.TankState;
 
 import static com.badlogic.gdx.math.MathUtils.isEqual;
 import static ru.mipt.bit.platformer.util.GdxGameUtils.continueProgress;
 
 /**
- * Asks {@link CollisionChecker} before moving, fires and leaves the level through {@link Battlefield}.
- * Knows nothing about the level itself. A destroyed tank does nothing.
+ * Domain entity. Asks {@link CollisionChecker} before moving, fires and leaves the level through {@link Battlefield}.
+ * Knows nothing about the level itself. Speed and shooting depend on its {@link TankState}.
+ * A destroyed tank does nothing.
  */
 public class Tank implements GameObject, Movable, Shooter, Damageable, HasHealth {
 
@@ -26,6 +29,7 @@ public class Tank implements GameObject, Movable, Shooter, Damageable, HasHealth
     private float movementProgress = 1f;
     private int health;
     private float reloadLeft = 0f;
+    private TankState state;
 
     /** {@code health} is both the starting and the maximum health. */
     public Tank(GridPoint2 startCoordinates, Direction startDirection, float movementSpeed, int health,
@@ -41,6 +45,7 @@ public class Tank implements GameObject, Movable, Shooter, Damageable, HasHealth
         this.movementSpeed = movementSpeed;
         this.collisionChecker = collisionChecker;
         this.battlefield = battlefield;
+        this.state = HealthState.forHealth(health, health);
     }
 
     /**
@@ -49,11 +54,11 @@ public class Tank implements GameObject, Movable, Shooter, Damageable, HasHealth
      */
     @Override
     public void shoot() {
-        if (!isAlive() || reloadLeft > 0f) {
+        if (!isAlive() || !state.canShoot() || reloadLeft > 0f) {
             return;
         }
         battlefield.add(new Bullet(destination, direction, BULLET_DAMAGE, battlefield));
-        reloadLeft = RELOAD_TIME;
+        reloadLeft = state.reloadTime(RELOAD_TIME);
     }
 
     @Override
@@ -62,9 +67,14 @@ public class Tank implements GameObject, Movable, Shooter, Damageable, HasHealth
             return;
         }
         health = Math.max(0, health - damage);
+        state = state.onHealthChanged(health, maxHealth);
         if (!isAlive()) {
             battlefield.remove(this);
         }
+    }
+
+    public TankState getState() {
+        return state;
     }
 
     public boolean isAlive() {
@@ -97,8 +107,9 @@ public class Tank implements GameObject, Movable, Shooter, Damageable, HasHealth
 
     @Override
     public void update(float deltaTime) {
+        state = state.onTimePassed(deltaTime);
         reloadLeft = Math.max(0f, reloadLeft - deltaTime);
-        movementProgress = continueProgress(movementProgress, deltaTime, movementSpeed);
+        movementProgress = continueProgress(movementProgress, deltaTime, state.movementTime(movementSpeed));
         if (!isMoving()) {
             // the tank has reached its destination
             coordinates.set(destination);

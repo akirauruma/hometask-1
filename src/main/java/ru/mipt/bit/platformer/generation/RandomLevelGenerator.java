@@ -7,7 +7,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-/** Random player start, trees and enemy tanks, all on different tiles. */
+/**
+ * Application, implements the {@link LevelGenerator} port without any I/O.
+ * Random player start, trees and enemy tanks, all on different tiles.
+ */
 public class RandomLevelGenerator implements LevelGenerator {
 
     private final int treeCount;

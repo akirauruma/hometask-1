@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Each frame first asks every strategy for its commands and only then runs them, so all
+ * Application service. Each frame first asks every strategy for its commands and only then runs them, so all
  * strategies decide on the same state of the world. Drops the strategy of an object that
  * left the level.
  */

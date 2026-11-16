@@ -2,6 +2,9 @@ package ru.mipt.bit.platformer.model;
 
 import com.badlogic.gdx.math.GridPoint2;
 import org.junit.jupiter.api.Test;
+import ru.mipt.bit.platformer.model.state.HeavyState;
+import ru.mipt.bit.platformer.model.state.LightState;
+import ru.mipt.bit.platformer.model.state.MediumState;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -230,5 +233,71 @@ class TankTest {
         assertThrows(IllegalArgumentException.class,
                 () -> new Tank(new GridPoint2(1, 1), Direction.RIGHT, SPEED, 0, EVERYTHING_FREE,
                         new RecordingBattlefield()));
+    }
+
+    @Test
+    void startsLight() {
+        assertTrue(tankAt(1, 1, EVERYTHING_FREE).getState() instanceof LightState);
+    }
+
+    @Test
+    void damageChangesTheState() {
+        Tank tank = tankAt(1, 1, EVERYTHING_FREE);
+
+        // 63 of 90 is exactly 70%
+        tank.takeDamage(27);
+        assertTrue(tank.getState() instanceof MediumState);
+
+        // 13 of 90 is less than 15%
+        tank.takeDamage(50);
+        assertTrue(tank.getState() instanceof HeavyState);
+    }
+
+    @Test
+    void mediumTankDrivesTwiceSlower() {
+        Tank tank = tankAt(1, 1, EVERYTHING_FREE);
+        tank.takeDamage(30);
+
+        tank.move(Direction.RIGHT);
+        tank.update(SPEED);
+        assertEquals(0.5f, tank.getMovementProgress(), 1e-6f);
+
+        tank.update(SPEED);
+        assertFalse(tank.isMoving());
+        assertEquals(new GridPoint2(2, 1), tank.getCoordinates());
+    }
+
+    @Test
+    void heavyTankDrivesThreeTimesSlower() {
+        Tank tank = tankAt(1, 1, EVERYTHING_FREE);
+        tank.takeDamage(80);
+
+        tank.move(Direction.RIGHT);
+        tank.update(SPEED);
+
+        assertEquals(1f / 3, tank.getMovementProgress(), 1e-6f);
+    }
+
+    @Test
+    void mediumTankStillShoots() {
+        RecordingBattlefield battlefield = new RecordingBattlefield();
+        Tank tank = tankOn(1, 1, battlefield);
+        tank.takeDamage(30);
+
+        tank.shoot();
+
+        assertEquals(1, battlefield.added.size());
+    }
+
+    @Test
+    void heavyTankCannotShoot() {
+        RecordingBattlefield battlefield = new RecordingBattlefield();
+        Tank tank = tankOn(1, 1, battlefield);
+        tank.takeDamage(80);
+
+        tank.shoot();
+
+        assertTrue(tank.isAlive());
+        assertEquals(List.of(), battlefield.added);
     }
 }

@@ -10,7 +10,7 @@ import ru.mipt.bit.platformer.util.TileMovement;
 import static ru.mipt.bit.platformer.util.GdxGameUtils.createBoundingRectangle;
 import static ru.mipt.bit.platformer.util.GdxGameUtils.drawTextureRegionUnscaled;
 
-/** Draws one object. The texture may be shared, so it is not disposed here. */
+/** Infrastructure: draws one object. The texture may be shared, so it is not disposed here. */
 public class GameObjectGraphics implements Renderable {
 
     private final GameObject object;

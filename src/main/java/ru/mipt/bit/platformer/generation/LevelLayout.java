@@ -4,7 +4,7 @@ import com.badlogic.gdx.math.GridPoint2;
 
 import java.util.List;
 
-/** What stands on the level: the player start, the trees and the enemy tanks. */
+/** Domain value: what stands on the level: the player start, the trees and the enemy tanks. */
 public class LevelLayout {
 
     private final GridPoint2 playerStart;

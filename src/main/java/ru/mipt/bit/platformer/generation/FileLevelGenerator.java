@@ -11,7 +11,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/** Reads the level from a text file: T — tree, X — player, _ — empty tile. */
+/**
+ * Infrastructure adapter of {@link LevelGenerator}.
+ * Reads the level from a text file: T — tree, X — player, _ — empty tile.
+ */
 public class FileLevelGenerator implements LevelGenerator {
 
     private static final char TREE = 'T';
