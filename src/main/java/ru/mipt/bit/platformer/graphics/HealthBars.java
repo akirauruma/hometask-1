@@ -22,8 +22,8 @@ public class HealthBars implements Decoration, Toggleable, Disposable {
 
     @Override
     public Renderable decorate(GameObject object, Renderable renderable) {
-        if (object instanceof HasHealth health) {
-            return new HealthBarDecorator(renderable, health, this);
+        if (object instanceof HasHealth) {
+            return new HealthBarDecorator(renderable, (HasHealth) object, this);
         }
         return renderable;
     }

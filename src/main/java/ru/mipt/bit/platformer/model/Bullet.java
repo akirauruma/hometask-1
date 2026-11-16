@@ -55,8 +55,8 @@ public class Bullet implements GameObject, Damageable {
 
     /** The target takes the damage first (another bullet is destroyed by it), then this bullet is gone. */
     private void hit(GameObject target) {
-        if (target instanceof Damageable damageable) {
-            damageable.takeDamage(damage);
+        if (target instanceof Damageable) {
+            ((Damageable) target).takeDamage(damage);
         }
         battlefield.remove(this);
     }

@@ -30,7 +30,7 @@ public class CommandInvoker implements LevelObserver {
     public void invokeAll() {
         List<Command> commands = new ArrayList<>();
         for (Controlled entry : controlled) {
-            commands.addAll(entry.strategy().nextCommands());
+            commands.addAll(entry.strategy.nextCommands());
         }
         commands.forEach(Command::execute);
     }
@@ -42,10 +42,17 @@ public class CommandInvoker implements LevelObserver {
 
     @Override
     public void objectRemoved(GameObject object) {
-        controlled.removeIf(entry -> entry.object() == object);
+        controlled.removeIf(entry -> entry.object == object);
     }
 
     /** {@code object} is null for a strategy of the whole game. */
-    private record Controlled(GameObject object, ControlStrategy strategy) {
+    private static class Controlled {
+        private final GameObject object;
+        private final ControlStrategy strategy;
+
+        Controlled(GameObject object, ControlStrategy strategy) {
+            this.object = object;
+            this.strategy = strategy;
+        }
     }
 }
