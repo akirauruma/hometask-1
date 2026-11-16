@@ -1,50 +1,49 @@
 package ru.mipt.bit.platformer.control;
 
-import com.badlogic.gdx.Gdx;
-import ru.mipt.bit.platformer.model.Direction;
-
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-
-import static com.badlogic.gdx.Input.Keys.A;
-import static com.badlogic.gdx.Input.Keys.D;
-import static com.badlogic.gdx.Input.Keys.DOWN;
-import static com.badlogic.gdx.Input.Keys.LEFT;
-import static com.badlogic.gdx.Input.Keys.RIGHT;
-import static com.badlogic.gdx.Input.Keys.S;
-import static com.badlogic.gdx.Input.Keys.UP;
-import static com.badlogic.gdx.Input.Keys.W;
 
 /**
- * Turns pressed keys into a direction.
- * <p>
- * Adding a key binding is now one line in the table instead of another copy-pasted
- * {@code if (Gdx.input.isKeyPressed(...))} block. The order of the entries is the priority
- * when several keys are held at once.
+ * Player control. A command bound with {@link #bind} runs every frame while its key is held,
+ * one bound with {@link #bindOnPress} runs once per key press.
  */
-public class KeyboardController {
+public class KeyboardController implements ControlStrategy {
 
-    private final Map<Integer, Direction> keyBindings = new LinkedHashMap<>();
+    private final InputProvider input;
+    private final Map<Integer, Command> whileHeld = new LinkedHashMap<>();
+    private final Map<Integer, Command> onPress = new LinkedHashMap<>();
 
-    public KeyboardController() {
-        keyBindings.put(UP, Direction.UP);
-        keyBindings.put(W, Direction.UP);
-        keyBindings.put(LEFT, Direction.LEFT);
-        keyBindings.put(A, Direction.LEFT);
-        keyBindings.put(DOWN, Direction.DOWN);
-        keyBindings.put(S, Direction.DOWN);
-        keyBindings.put(RIGHT, Direction.RIGHT);
-        keyBindings.put(D, Direction.RIGHT);
+    public KeyboardController(InputProvider input) {
+        this.input = input;
     }
 
-    /** The direction of the first pressed key, or empty if nothing is pressed. */
-    public Optional<Direction> getPressedDirection() {
-        for (Map.Entry<Integer, Direction> binding : keyBindings.entrySet()) {
-            if (Gdx.input.isKeyPressed(binding.getKey())) {
-                return Optional.of(binding.getValue());
+    /** Returns {@code this} for chaining. */
+    public KeyboardController bind(int keyCode, Command command) {
+        whileHeld.put(keyCode, command);
+        return this;
+    }
+
+    /** Returns {@code this} for chaining. */
+    public KeyboardController bindOnPress(int keyCode, Command command) {
+        onPress.put(keyCode, command);
+        return this;
+    }
+
+    @Override
+    public List<Command> nextCommands() {
+        List<Command> commands = new ArrayList<>();
+        for (Map.Entry<Integer, Command> binding : whileHeld.entrySet()) {
+            if (input.isPressed(binding.getKey())) {
+                commands.add(binding.getValue());
             }
         }
-        return Optional.empty();
+        for (Map.Entry<Integer, Command> binding : onPress.entrySet()) {
+            if (input.isJustPressed(binding.getKey())) {
+                commands.add(binding.getValue());
+            }
+        }
+        return commands;
     }
 }
