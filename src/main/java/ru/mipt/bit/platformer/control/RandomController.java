@@ -22,8 +22,8 @@ public class RandomController implements ControlStrategy {
 
     @Override
     public List<Command> nextCommands() {
-        if (movable instanceof Shooter shooter && random.nextBoolean()) {
-            return List.of(new ShootCommand(shooter));
+        if (movable instanceof Shooter && random.nextBoolean()) {
+            return List.of(new ShootCommand((Shooter) movable));
         }
         Direction direction = DIRECTIONS[random.nextInt(DIRECTIONS.length)];
         return List.of(new MoveCommand(movable, direction));
